@@ -74,8 +74,9 @@ public class RefreshTokenCommandHandler(
         catch (DbUpdateConcurrencyException)
         {
             // Another concurrent refresh call rotated this exact token first
-            // (RefreshToken.RowVersion changed under us) — treat it the same as
-            // an invalid token rather than silently issuing a second valid pair.
+            // (Postgres's xmin system column, used as the concurrency token —
+            // see RefreshTokenConfiguration — changed under us) — treat it the
+            // same as an invalid token rather than silently issuing a second pair.
             throw new AuthenticationFailedException();
         }
 

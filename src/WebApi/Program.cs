@@ -110,10 +110,13 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// AllowAnonymous is required: the global FallbackPolicy requires auth by default,
+// but Docker/orchestrator healthchecks (see docker-compose.yml) call this with no
+// bearer token — without this the container is permanently reported "unhealthy".
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
-});
+}).AllowAnonymous();
 
 app.MapHangfireDashboard("/hangfire", new DashboardOptions
 {
