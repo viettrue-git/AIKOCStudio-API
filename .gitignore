@@ -1,0 +1,29 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.dll
+*.pdb
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# Env / secrets
+.env
+.env.local
+*.local.json
+appsettings.Production.json
+
+# Editor / OS
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.local.yml
