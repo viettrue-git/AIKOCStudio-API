@@ -40,28 +40,34 @@ public class ProductsControllerTests : IClassFixture<CustomWebApplicationFactory
     {
         var client = await CreateAuthenticatedClientAsync();
 
-        var createResponse = await client.PostAsJsonAsync("/api/products", new CreateProductCommand(
-            Name: "Aurora Serum",
-            Description: "Brightening vitamin C serum",
-            Category: "Skincare",
-            KeyFeatures: ["Vitamin C", "Fragrance-free"],
-            TargetPersonaId: null));
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/products",
+            new CreateProductCommand(
+                Name: "Aurora Serum",
+                Description: "Brightening vitamin C serum",
+                Category: "Skincare",
+                KeyFeatures: ["Vitamin C", "Fragrance-free"],
+                TargetPersonaId: null),
+            TestJsonOptions.Default);
 
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var productId = await createResponse.Content.ReadFromJsonAsync<Guid>();
 
         var getResponse = await client.GetAsync($"/api/products/{productId}");
-        var product = await getResponse.Content.ReadFromJsonAsync<ProductDto>();
+        var product = await getResponse.Content.ReadFromJsonAsync<ProductDto>(TestJsonOptions.Default);
         product!.Name.Should().Be("Aurora Serum");
 
-        var updateResponse = await client.PutAsJsonAsync($"/api/products/{productId}", new UpdateProductCommand(
-            Id: productId,
-            Name: "Aurora Serum (updated)",
-            Description: product.Description,
-            Category: product.Category,
-            KeyFeatures: product.KeyFeatures,
-            TargetPersonaId: product.TargetPersonaId,
-            IsActive: product.IsActive));
+        var updateResponse = await client.PutAsJsonAsync(
+            $"/api/products/{productId}",
+            new UpdateProductCommand(
+                Id: productId,
+                Name: "Aurora Serum (updated)",
+                Description: product.Description,
+                Category: product.Category,
+                KeyFeatures: product.KeyFeatures,
+                TargetPersonaId: product.TargetPersonaId,
+                IsActive: product.IsActive),
+            TestJsonOptions.Default);
         updateResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var deleteResponse = await client.DeleteAsync($"/api/products/{productId}");
@@ -76,28 +82,34 @@ public class ProductsControllerTests : IClassFixture<CustomWebApplicationFactory
     {
         var client = await CreateAuthenticatedClientAsync();
 
-        var personaResponse = await client.PostAsJsonAsync("/api/personas", new CreatePersonaCommand(
-            Name: "Mia Chen",
-            Description: "Beauty & skincare KOC",
-            ToneOfVoice: "Warm",
-            TargetAudience: "Gen Z",
-            Platform: Platform.TikTok,
-            DefaultAiProvider: null,
-            SystemPromptTemplate: "You are Mia."));
+        var personaResponse = await client.PostAsJsonAsync(
+            "/api/personas",
+            new CreatePersonaCommand(
+                Name: "Mia Chen",
+                Description: "Beauty & skincare KOC",
+                ToneOfVoice: "Warm",
+                TargetAudience: "Gen Z",
+                Platform: Platform.TikTok,
+                DefaultAiProvider: null,
+                SystemPromptTemplate: "You are Mia."),
+            TestJsonOptions.Default);
         var personaId = await personaResponse.Content.ReadFromJsonAsync<Guid>();
 
-        var productResponse = await client.PostAsJsonAsync("/api/products", new CreateProductCommand(
-            Name: "Aurora Serum",
-            Description: "Brightening vitamin C serum",
-            Category: "Skincare",
-            KeyFeatures: ["Vitamin C"],
-            TargetPersonaId: personaId));
+        var productResponse = await client.PostAsJsonAsync(
+            "/api/products",
+            new CreateProductCommand(
+                Name: "Aurora Serum",
+                Description: "Brightening vitamin C serum",
+                Category: "Skincare",
+                KeyFeatures: ["Vitamin C"],
+                TargetPersonaId: personaId),
+            TestJsonOptions.Default);
         var productId = await productResponse.Content.ReadFromJsonAsync<Guid>();
 
         await client.DeleteAsync($"/api/personas/{personaId}");
 
         var getProductResponse = await client.GetAsync($"/api/products/{productId}");
-        var product = await getProductResponse.Content.ReadFromJsonAsync<ProductDto>();
+        var product = await getProductResponse.Content.ReadFromJsonAsync<ProductDto>(TestJsonOptions.Default);
 
         product!.TargetPersonaId.Should().BeNull(
             "the linked Persona was soft-deleted, which should null the FK rather than leaving the Product pointing at an invisible row");

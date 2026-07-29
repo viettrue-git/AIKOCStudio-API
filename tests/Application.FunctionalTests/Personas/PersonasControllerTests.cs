@@ -39,14 +39,17 @@ public class PersonasControllerTests : IClassFixture<CustomWebApplicationFactory
     {
         var client = await CreateAuthenticatedClientAsync();
 
-        var createResponse = await client.PostAsJsonAsync("/api/personas", new CreatePersonaCommand(
-            Name: "Mia Chen",
-            Description: "Beauty & skincare KOC",
-            ToneOfVoice: "Warm, specific",
-            TargetAudience: "Gen Z skincare enthusiasts",
-            Platform: Platform.TikTok,
-            DefaultAiProvider: null,
-            SystemPromptTemplate: "You are Mia, 26, Shanghai-based esthetician."));
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/personas",
+            new CreatePersonaCommand(
+                Name: "Mia Chen",
+                Description: "Beauty & skincare KOC",
+                ToneOfVoice: "Warm, specific",
+                TargetAudience: "Gen Z skincare enthusiasts",
+                Platform: Platform.TikTok,
+                DefaultAiProvider: null,
+                SystemPromptTemplate: "You are Mia, 26, Shanghai-based esthetician."),
+            TestJsonOptions.Default);
 
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var personaId = await createResponse.Content.ReadFromJsonAsync<Guid>();
@@ -54,23 +57,26 @@ public class PersonasControllerTests : IClassFixture<CustomWebApplicationFactory
 
         var getResponse = await client.GetAsync($"/api/personas/{personaId}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var persona = await getResponse.Content.ReadFromJsonAsync<PersonaDto>();
+        var persona = await getResponse.Content.ReadFromJsonAsync<PersonaDto>(TestJsonOptions.Default);
         persona!.Name.Should().Be("Mia Chen");
 
-        var updateResponse = await client.PutAsJsonAsync($"/api/personas/{personaId}", new UpdatePersonaCommand(
-            Id: personaId,
-            Name: "Mia Chen (updated)",
-            Description: persona.Description,
-            ToneOfVoice: persona.ToneOfVoice,
-            TargetAudience: persona.TargetAudience,
-            Platform: persona.Platform,
-            DefaultAiProvider: persona.DefaultAiProvider,
-            SystemPromptTemplate: persona.SystemPromptTemplate,
-            IsActive: persona.IsActive));
+        var updateResponse = await client.PutAsJsonAsync(
+            $"/api/personas/{personaId}",
+            new UpdatePersonaCommand(
+                Id: personaId,
+                Name: "Mia Chen (updated)",
+                Description: persona.Description,
+                ToneOfVoice: persona.ToneOfVoice,
+                TargetAudience: persona.TargetAudience,
+                Platform: persona.Platform,
+                DefaultAiProvider: persona.DefaultAiProvider,
+                SystemPromptTemplate: persona.SystemPromptTemplate,
+                IsActive: persona.IsActive),
+            TestJsonOptions.Default);
         updateResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var getUpdatedResponse = await client.GetAsync($"/api/personas/{personaId}");
-        var updatedPersona = await getUpdatedResponse.Content.ReadFromJsonAsync<PersonaDto>();
+        var updatedPersona = await getUpdatedResponse.Content.ReadFromJsonAsync<PersonaDto>(TestJsonOptions.Default);
         updatedPersona!.Name.Should().Be("Mia Chen (updated)");
 
         var deleteResponse = await client.DeleteAsync($"/api/personas/{personaId}");
@@ -82,7 +88,7 @@ public class PersonasControllerTests : IClassFixture<CustomWebApplicationFactory
 
         // ... and no longer appears in the list.
         var listResponse = await client.GetAsync("/api/personas?searchTerm=Mia Chen");
-        var page = await listResponse.Content.ReadFromJsonAsync<PagedResult<PersonaDto>>();
+        var page = await listResponse.Content.ReadFromJsonAsync<PagedResult<PersonaDto>>(TestJsonOptions.Default);
         page!.Items.Should().NotContain(p => p.Id == personaId);
     }
 }
