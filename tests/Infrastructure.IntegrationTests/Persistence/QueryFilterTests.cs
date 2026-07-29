@@ -62,4 +62,45 @@ public class QueryFilterTests
             visibleToSameTenant.Should().ContainSingle(u => u.Email == "tenant1-user@example.com");
         }
     }
+
+    /// <summary>
+    /// Persona implements BOTH ITenantScoped and ISoftDelete, which EF Core 8
+    /// can only satisfy via ONE combined HasQueryFilter (see ApplicationDbContext's
+    /// ApplyTenantAndSoftDeleteFilter). This proves neither half of that combined
+    /// predicate silently disables the other — a soft-deleted row in the CORRECT
+    /// tenant must still be hidden, and a wrong-tenant row must still be hidden
+    /// even if never soft-deleted.
+    /// </summary>
+    [Fact]
+    public async Task Personas_AreIsolatedByTenant_AndExcludeSoftDeleted_Simultaneously()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var tenant1Id = Guid.NewGuid();
+        var tenant2Id = Guid.NewGuid();
+
+        var activeInTenant1 = Guid.NewGuid();
+        var softDeletedInTenant1 = Guid.NewGuid();
+        var activeInTenant2 = Guid.NewGuid();
+
+        using (var writerContext = CreateContext(databaseName, tenant1Id))
+        {
+            writerContext.Personas.AddRange(
+                new Persona { Id = activeInTenant1, TenantId = tenant1Id, Name = "Active T1", Platform = Platform.TikTok },
+                new Persona { Id = softDeletedInTenant1, TenantId = tenant1Id, Name = "Deleted T1", Platform = Platform.TikTok, IsDeleted = true, DeletedAt = DateTimeOffset.UtcNow });
+            await writerContext.SaveChangesAsync();
+        }
+
+        using (var tenant2WriterContext = CreateContext(databaseName, tenant2Id))
+        {
+            tenant2WriterContext.Personas.Add(
+                new Persona { Id = activeInTenant2, TenantId = tenant2Id, Name = "Active T2", Platform = Platform.Instagram });
+            await tenant2WriterContext.SaveChangesAsync();
+        }
+
+        using var tenant1ReaderContext = CreateContext(databaseName, tenant1Id);
+        var visibleToTenant1 = await tenant1ReaderContext.Personas.ToListAsync();
+
+        visibleToTenant1.Should().ContainSingle().Which.Id.Should().Be(activeInTenant1,
+            "the soft-deleted row (same tenant) and the other tenant's row must both stay hidden");
+    }
 }

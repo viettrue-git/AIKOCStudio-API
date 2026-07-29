@@ -51,9 +51,11 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__Redis: "redis:6379"
-      Minio__Endpoint: "minio:9000"
+      Minio__Endpoint: "http://minio:9000"
       Minio__AccessKey: ${MINIO_ROOT_USER}
       Minio__SecretKey: ${MINIO_ROOT_PASSWORD}
+      Minio__BucketName: ${MINIO_BUCKET_NAME}
+      Minio__PublicEndpoint: ${MINIO_PUBLIC_ENDPOINT}
       Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}

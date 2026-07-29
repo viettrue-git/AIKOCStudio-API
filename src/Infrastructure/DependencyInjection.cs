@@ -2,6 +2,7 @@ using AiKocStudio.Application.Common.Interfaces;
 using AiKocStudio.Infrastructure.Identity;
 using AiKocStudio.Infrastructure.Persistence;
 using AiKocStudio.Infrastructure.Persistence.Interceptors;
+using AiKocStudio.Infrastructure.Storage;
 using Hangfire;
 using Hangfire.Redis.StackExchange;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddSingleton<IIdentityService, PasswordHasherWrapper>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IFileStorageService, MinioFileStorageService>();
 
         return services;
     }

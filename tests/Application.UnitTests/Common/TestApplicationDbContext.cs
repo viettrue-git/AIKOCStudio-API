@@ -19,6 +19,8 @@ public class TestApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Persona> Personas => Set<Persona>();
+    public DbSet<Product> Products => Set<Product>();
 
     public static TestApplicationDbContext Create()
     {

@@ -134,7 +134,17 @@ static async Task SeedFirstAdminUserAsync(WebApplication app)
     var identityService = scope.ServiceProvider.GetRequiredService<IIdentityService>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    await context.Database.MigrateAsync();
+    // MigrateAsync only works against a relational provider — functional tests
+    // swap in EF Core InMemory (no Docker/Postgres in this dev environment),
+    // which needs EnsureCreatedAsync instead.
+    if (context.Database.IsRelational())
+    {
+        await context.Database.MigrateAsync();
+    }
+    else
+    {
+        await context.Database.EnsureCreatedAsync();
+    }
 
     if (await context.Users.AnyAsync())
     {
